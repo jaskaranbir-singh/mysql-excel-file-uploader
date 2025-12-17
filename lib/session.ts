@@ -24,27 +24,29 @@ export type SessionData = {
 function mustGetSessionPassword(): string {
   const pw = process.env.SESSION_PASSWORD;
   if (!pw || pw.trim().length < 32) {
-    // fail fast with a clear message
     throw new Error(
-      "SESSION_PASSWORD is missing or too short. Set it in .env.local (32+ chars) and restart the server."
+      "SESSION_PASSWORD is missing or too short (32+ chars). Add it to Vercel Environment Variables and/or .env.local."
     );
   }
-  return pw;
+  return pw.trim();
 }
 
-export const sessionOptions: SessionOptions = {
-  cookieName: "mysql-uploader-session",
-  password: mustGetSessionPassword(),
-  cookieOptions: {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 30,
-  },
-};
+// ✅ Create options at runtime (not at import time)
+function getSessionOptions(): SessionOptions {
+  return {
+    cookieName: "mysql-uploader-session",
+    password: mustGetSessionPassword(),
+    cookieOptions: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 30,
+    },
+  };
+}
 
 export async function getSession(): Promise<IronSession<SessionData>> {
-  const store = await cookies();
-  return getIronSession<SessionData>(store, sessionOptions);
+  const store = await cookies(); // keep await for Next 16
+  return getIronSession<SessionData>(store, getSessionOptions());
 }
