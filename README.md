@@ -70,7 +70,14 @@ NEXT_PUBLIC_DEVELOPER_URL= https://www.jaskaranbir-singh.com
 
 **Important Security Notes:**
 
-- `SESSION_PASSWORD` must be at least 32 characters long
+## API-KEY - Using Node.js
+
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+Output example:
+
+SESSION_PASSWORD=3bf5a1c244c2f5b1f3b1a50f2f6f0e4d6e21e8a2b1f4f3d3c1b2a1a0f9e5678d
+
 - Never commit `.env.local` to version control
 - Use strong, randomly generated passwords in production
 
@@ -143,15 +150,13 @@ g. mysql> CREATE USER IF NOT EXISTS 'admin'@'127.0.0.1' IDENTIFIED BY 'admin@123
 
 -- Grant privileges for localhost && Grant privileges for 127.0.0.1
 
-GRANT ALL PRIVILEGES ON dummy_data._ TO 'admin'@'localhost';
-GRANT ALL PRIVILEGES ON dummy_data._ TO 'admin'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON dummy*data.* TO 'admin'@'localhost';
+GRANT ALL PRIVILEGES ON dummy*data.* TO 'admin'@'127.0.0.1';
 
 -- ⚠️ IMPORTANT: Flush privileges to apply changes
 FLUSH PRIVILEGES;
 
-# CREATE OR CONNECTION
-
-// CREATE OR CONNNECTION
+### Create or Connecting to MySQL Database
 
 Connect to your MySQL server
 
@@ -344,8 +349,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Your Name**
 
-- Website: [your-website.com](https://www.jaskaranbir-singh.com)
-- GitHub: [@yourusername](https://github.com/jaskaranbir-singh)
+- Website: [https://www.jaskaranbir-singh.com]
+- GitHub: [https://github.com/jaskaranbir-singh]
 
 ## Acknowledgments
 
