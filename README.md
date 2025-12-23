@@ -57,7 +57,7 @@ Create a `.env.local` file in the root directory:
 
 ```env
 # Session Security (REQUIRED - minimum 32 characters)
-SESSION_PASSWORD=your-super-secret-password-min-32-chars-required-change-this
+SESSION_PASSWORD=3bf5a1c244c2f5b1f3b1a50f2f6f0e4d6e21e8a2b1f4f3d3c1b2a1a0f9e5678d
 
 # Database Host Whitelist (comma-separated, optional)
 # If not set, all hosts are allowed
