@@ -9,8 +9,15 @@ export type ParsedTable = {
 };
 
 export async function parseFileToTable(file: File): Promise<ParsedTable> {
-  const name = file.name.toLowerCase();
+  // ✅ Validate file exists
+  if (!file || !file.name) {
+    throw new Error("Invalid file: file or file name is undefined");
+  }
 
+  const name = file.name.toLowerCase();
+  console.log("Parsing file:", name);
+
+  // ✅ CSV parsing
   if (name.endsWith(".csv")) {
     const text = await file.text();
     const records = parseCsv(text, {
@@ -18,38 +25,112 @@ export async function parseFileToTable(file: File): Promise<ParsedTable> {
       skip_empty_lines: true,
       trim: true,
     }) as Record<string, unknown>[];
+
+    if (records.length === 0) {
+      throw new Error("CSV file is empty");
+    }
+
     const first = records[0] ?? {};
     return { columns: Object.keys(first), rows: records };
   }
 
+  // ✅ Excel parsing (.xlsx or .xls)
   if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
-    const ab = await file.arrayBuffer();
-    const wb = new ExcelJS.Workbook();
+    try {
+      const arrayBuffer = await file.arrayBuffer();
 
-    // ✅ 100% WORKING FIX: Convert ArrayBuffer to Buffer properly
-    const buffer = Buffer.from(ab);
-    await wb.xlsx.load(ab as any);
+      if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+        throw new Error("Excel file is empty or could not be read");
+      }
 
-    const ws = wb.worksheets[0];
-    if (!ws) throw new Error("No worksheet found.");
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(arrayBuffer);
 
-    const headerRow = ws.getRow(1);
-    const headers: string[] = [];
-    headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-      headers[colNumber - 1] =
-        String(cell.value ?? `col_${colNumber}`).trim() || `col_${colNumber}`;
-    });
+      const worksheet = workbook.worksheets[0];
+      if (!worksheet) {
+        throw new Error("No worksheet found in Excel file");
+      }
 
-    const rows: Record<string, unknown>[] = [];
-    for (let r = 2; r <= ws.rowCount; r++) {
-      const row = ws.getRow(r);
-      const obj: Record<string, unknown> = {};
-      headers.forEach((h, i) => (obj[h] = row.getCell(i + 1)?.value ?? null));
-      rows.push(obj);
+      // ✅ FIX: Get actual column count from worksheet
+      const actualColumnCount =
+        worksheet.actualColumnCount || worksheet.columnCount;
+
+      if (actualColumnCount === 0) {
+        throw new Error("Worksheet has no columns");
+      }
+
+      // ✅ FIX: Read headers using values array instead of eachCell
+      const headerRow = worksheet.getRow(1);
+      const headers: string[] = [];
+
+      // Read all columns based on actual column count
+      for (let colIndex = 1; colIndex <= actualColumnCount; colIndex++) {
+        const cell = headerRow.getCell(colIndex);
+        const cellValue = cell.value;
+
+        // Handle different cell value types
+        let headerName: string;
+        if (cellValue === null || cellValue === undefined) {
+          headerName = `col_${colIndex}`;
+        } else if (typeof cellValue === "object" && "text" in cellValue) {
+          // Rich text format
+          headerName = (cellValue as any).text || `col_${colIndex}`;
+        } else {
+          headerName = String(cellValue).trim() || `col_${colIndex}`;
+        }
+
+        headers.push(headerName);
+      }
+
+      console.log(`Found ${headers.length} headers:`, headers);
+
+      if (headers.length === 0) {
+        throw new Error("No columns found in Excel file");
+      }
+
+      // ✅ Extract data rows (starting from row 2)
+      const rows: Record<string, unknown>[] = [];
+      const actualRowCount = worksheet.actualRowCount || worksheet.rowCount;
+
+      for (let rowIndex = 2; rowIndex <= actualRowCount; rowIndex++) {
+        const row = worksheet.getRow(rowIndex);
+        const rowData: Record<string, unknown> = {};
+
+        headers.forEach((header, colIndex) => {
+          const cell = row.getCell(colIndex + 1);
+          const cellValue = cell.value;
+
+          // Handle different cell value types
+          if (cellValue === null || cellValue === undefined) {
+            rowData[header] = null;
+          } else if (typeof cellValue === "object" && "text" in cellValue) {
+            // Rich text format
+            rowData[header] = (cellValue as any).text;
+          } else if (typeof cellValue === "object" && "result" in cellValue) {
+            // Formula result
+            rowData[header] = (cellValue as any).result;
+          } else {
+            rowData[header] = cellValue;
+          }
+        });
+
+        rows.push(rowData);
+      }
+
+      console.log(
+        `Parsed Excel: ${headers.length} columns, ${rows.length} rows`
+      );
+
+      return { columns: headers, rows };
+    } catch (error) {
+      console.error("Excel parsing error:", error);
+      throw new Error(
+        `Failed to parse Excel file: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
-
-    return { columns: headers, rows };
   }
 
-  throw new Error("Unsupported file type. Use .csv, .xlsx, or .xls");
+  throw new Error(
+    `Unsupported file type: ${name}. Only .csv, .xlsx, or .xls files are supported`
+  );
 }
