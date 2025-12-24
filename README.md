@@ -72,11 +72,16 @@ NEXT_PUBLIC_DEVELOPER_URL= https://www.jaskaranbir-singh.com
 
 ## API-KEY - Using Node.js
 
+```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
+```
+
+```bash
 Output example:
 
 SESSION_PASSWORD=3bf5a1c244c2f5b1f3b1a50f2f6f0e4d6e21e8a2b1f4f3d3c1b2a1a0f9e5678d
+```
 
 - Never commit `.env.local` to version control
 - Use strong, randomly generated passwords in production
@@ -104,6 +109,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
    - **Username**: Database user
    - **Password**: Database password
    - **Database**: Target database name
+
 3. Click "Connect to Database"
 
 4. Set Up MySQL Database
@@ -111,7 +117,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 a. Open MySQL 8.0 Command Line Client Terminal
 
-b. show databases;
+b.
+
+```bash
+show databases;
+```
 
 mysql> show databases;
 +--------------------+
@@ -123,7 +133,11 @@ mysql> show databases;
 | sys |
 +--------------------+
 
-c. CREATE DATABASE IF NOT EXISTS dummy_data;
+c.
+
+```bash
+CREATE DATABASE IF NOT EXISTS dummy_data;
+```
 
 mysql> show databases;
 +--------------------+
@@ -137,24 +151,21 @@ mysql> show databases;
 +--------------------+
 5 rows in set (0.00 sec)
 
-d. USE dummy_data;
+d.
+
+```bash
+USE dummy_data;
+```
 
 Database changed to dummy_data
 
-e. SHOW TABLES;
+e.
+
+```bash
+ SHOW TABLES;
+```
+
 Empty set (0.00 sec) for dummy_data
-
-f. mysql> CREATE USER IF NOT EXISTS 'admin'@'localhost' IDENTIFIED BY 'admin@123;
-
-g. mysql> CREATE USER IF NOT EXISTS 'admin'@'127.0.0.1' IDENTIFIED BY 'admin@123';
-
--- Grant privileges for localhost && Grant privileges for 127.0.0.1
-
-GRANT ALL PRIVILEGES ON dummy*data.* TO 'admin'@'localhost';
-GRANT ALL PRIVILEGES ON dummy*data.* TO 'admin'@'127.0.0.1';
-
--- ⚠️ IMPORTANT: Flush privileges to apply changes
-FLUSH PRIVILEGES;
 
 ### Create or Connecting to MySQL Database
 
@@ -164,19 +175,47 @@ Click "Create a new SQL tab"
 
 Copy and paste the following SQL commands:
 
--- Create the database
-CREATE DATABASE IF NOT EXISTS dummy_data;
+```bash
+ CREATE DATABASE IF NOT EXISTS dummy_data;
 
--- Create MySQL users
-CREATE USER IF NOT EXISTS 'admin'@'localhost' IDENTIFIED BY 'admin@123';
-CREATE USER IF NOT EXISTS 'admin'@'127.0.0.1' IDENTIFIED BY 'admin@123';
+ CREATE USER IF NOT EXISTS 'admin'@'localhost' IDENTIFIED BY 'admin@123';
 
--- Grant all privileges on the database
-GRANT ALL PRIVILEGES ON dummy*data.* TO 'admin'@'localhost';
-GRANT ALL PRIVILEGES ON dummy*data.* TO 'admin'@'127.0.0.1';
+ CREATE USER IF NOT EXISTS 'admin'@'127.0.0.1' IDENTIFIED BY 'admin';
 
--- Apply the changes
+ GRANT ALL PRIVILEGES ON dummy_data.* TO 'admin'@'localhost';
+ GRANT ALL PRIVILEGES ON dummy_data.* TO 'admin'@'127.0.0.1';
+
+ FLUSH PRIVILEGES;
+```
+
+## 100% Fix for MySQL Connection Error
+
+```bash
+
+mysql -h localhost -u root -p
+
+```
+
+```bash
+admin@123
+```
+
+```bash
+
+DROP USER IF EXISTS 'admin'@'localhost';
+DROP USER IF EXISTS 'admin'@'127.0.0.1';
+
+CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin@123';
+CREATE USER 'admin'@'127.0.0.1' IDENTIFIED BY 'admin@123';
+
+GRANT ALL PRIVILEGES ON dummy_data.* TO 'admin'@'localhost';
+GRANT ALL PRIVILEGES ON dummy_data.* TO 'admin'@'127.0.0.1';
+
 FLUSH PRIVILEGES;
+
+EXIT;
+
+```
 
 ### Uploading Files
 
@@ -243,6 +282,19 @@ mysql-file-manager/
 - **Connection Pooling**: Efficient database connection management
 
 ## Configuration
+
+```bash
+New-Item .env.local -ItemType File
+```
+
+```bash
+notepad .env.local
+
+```
+
+```bash
+SESSION_PASSWORD=
+```
 
 ### Database Host Whitelist
 
